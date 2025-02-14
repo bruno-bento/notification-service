@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "emails")
@@ -18,6 +19,11 @@ public class Email extends Notification {
     @Column(columnDefinition = "TEXT")
     private String body;
 
+    private String trackingId;
+    private LocalDateTime openedAt;
+    private String bounceReason;
+    private LocalDateTime bounceAt;
+
     @Builder
     public Email(String recipient, String subject, String body) {
         this.recipient = recipient;
@@ -26,6 +32,7 @@ public class Email extends Notification {
         this.status = NotificationStatus.PENDING;
         this.retryCount = 0;
         this.createdAt = LocalDateTime.now();
+        this.trackingId = UUID.randomUUID().toString();
     }
 
     @Override
@@ -38,6 +45,20 @@ public class Email extends Notification {
     public void markAsFailed() {
         this.status = NotificationStatus.FAILED;
         this.retryCount++;
+    }
+
+    public void markAsOpened() {
+        this.openedAt = LocalDateTime.now();
+    }
+
+    public void markAsBounced(String reason) {
+        this.status = NotificationStatus.BOUNCED;
+        this.bounceReason = reason;
+        this.bounceAt = LocalDateTime.now();
+    }
+
+    public void markAsPermanentlyFailed() {
+        this.status = NotificationStatus.PERMANENTLY_FAILED;
     }
 
     @Override
