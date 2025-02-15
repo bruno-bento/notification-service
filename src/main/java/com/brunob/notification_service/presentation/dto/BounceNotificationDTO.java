@@ -1,4 +1,4 @@
-package com.brunob.notification_service.application.dto;
+package com.brunob.notification_service.presentation.dto;
 
 import lombok.Data;
 

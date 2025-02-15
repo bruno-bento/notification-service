@@ -1,4 +1,4 @@
-package com.brunob.notification_service.application.dto;
+package com.brunob.notification_service.presentation.dto;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,9 +1,9 @@
 package com.brunob.notification_service.application.service;
 
-import com.brunob.notification_service.application.dto.BounceNotificationDTO;
+import com.brunob.notification_service.presentation.dto.BounceNotificationDTO;
 import com.brunob.notification_service.domain.model.email.Email;
 import com.brunob.notification_service.domain.repository.EmailRepository;
-import com.brunob.notification_service.application.dto.EmailRequestDTO;
+import com.brunob.notification_service.presentation.dto.EmailRequestDTO;
 import com.brunob.notification_service.infrastructure.mail.EmailSender;
 import com.brunob.notification_service.infrastructure.messaging.NotificationProducer;
 import org.springframework.beans.factory.annotation.Autowired;
