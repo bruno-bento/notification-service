@@ -1,5 +1,6 @@
 package com.brunob.notification_service.application.service;
 
+import com.brunob.notification_service.domain.model.smtp.SmtpConfig;
 import com.brunob.notification_service.presentation.dto.BounceNotificationDTO;
 import com.brunob.notification_service.domain.model.email.Email;
 import com.brunob.notification_service.domain.repository.EmailRepository;
@@ -21,6 +22,9 @@ public class EmailService implements NotificationService<Email> {
     @Autowired
     private EmailSender emailSender;
 
+    @Autowired
+    private  SmtpConfigService smtpConfigService;
+
     @Override
     public Email create(Object request) {
         EmailRequestDTO dto = (EmailRequestDTO) request;
@@ -28,6 +32,7 @@ public class EmailService implements NotificationService<Email> {
                 .recipient(dto.getRecipient())
                 .subject(dto.getSubject())
                 .body(dto.getBody())
+                .smtpId(dto.getSmtpId())
                 .build();
         return emailRepository.save(email);
     }
@@ -42,7 +47,6 @@ public class EmailService implements NotificationService<Email> {
         return emailRepository.findAll();
     }
 
-
     public void markEmailAsOpened(String trackingId) {
          emailRepository.findByTrackingId(trackingId).ifPresent(email -> {
              email.markAsOpened();
@@ -55,7 +59,11 @@ public class EmailService implements NotificationService<Email> {
             if (!email.canRetry()) return;
 
             try {
-                emailSender.send(email);
+                SmtpConfig smtpConfig = (email.getSmtpId() != null) ?
+                        smtpConfigService.getById(email.getSmtpId())
+                        : smtpConfigService.chooseLeastUsedSmtp();
+
+                emailSender.send(email, smtpConfig);
                 email.markAsSent();
                 System.out.println("Email sent successfully: " + emailId);
             } catch (Exception e) {

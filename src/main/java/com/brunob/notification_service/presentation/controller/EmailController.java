@@ -1,12 +1,16 @@
 package com.brunob.notification_service.presentation.controller;
 
+import com.brunob.notification_service.application.service.SmtpConfigService;
+import com.brunob.notification_service.domain.model.smtp.SmtpConfig;
 import com.brunob.notification_service.presentation.dto.ApiResponse;
 import com.brunob.notification_service.presentation.dto.BounceNotificationDTO;
 import com.brunob.notification_service.presentation.dto.EmailRequestDTO;
 import com.brunob.notification_service.application.service.EmailService;
 import com.brunob.notification_service.domain.model.email.Email;
 import com.brunob.notification_service.infrastructure.mail.TrackingPixelUtil;
+import com.brunob.notification_service.presentation.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,44 +19,48 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/emails")
+@Tag(name = "E-mails", description = "API for send de e-mails")
 public class EmailController {
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private SmtpConfigService smtpConfigService;
 
     @Autowired
     private TrackingPixelUtil trackingPixelUtil;
 
     @PostMapping("/send")
     @Operation(summary = "Send email to queue", description = "This endpoint creates an e-mail and sends it to the processing queue")
-    public ResponseEntity<ApiResponse<String>>  sendEmail(@RequestBody EmailRequestDTO request) {
-        Email email = emailService.create(request);
-        emailService.send(email.getId());
-        ApiResponse<String> response = ApiResponse.<String>builder()
-                .timestamp(LocalDateTime.now())
-                .status(200)
-                .message("Email queued for sending!")
-                .data("ID: " + email.getId())
-                .build();
+    public ResponseEntity<ApiResponse<String>> sendEmail(@RequestBody EmailRequestDTO request) {
+        try {
+            if (!smtpConfigService.isSmtpValid(request.getSmtpId())) {
+                return ResponseUtil.notFound("Servidor SMTP não encontrado", "ID: " + request.getSmtpId());
+            }
 
-        return ResponseEntity.ok(response);
+            Email email = emailService.create(request);
+            emailService.send(email.getId());
+
+            return ResponseUtil.success("ID: " + email.getId(), "Email queued for sending!");
+        } catch (IllegalStateException e) {
+            return ResponseUtil.badRequest("Erro no envio", e.getMessage());
+        } catch (NoSuchElementException e) {
+            return ResponseUtil.notFound("Erro no envio", e.getMessage());
+        }
     }
+
 
     @GetMapping
     @Operation(summary = "List emails", description = "This endpoint list all e-mails")
     public ResponseEntity<ApiResponse<List<Email>>> listEmails() {
         List<Email> emails = emailService.listAll();
-        ApiResponse<List<Email>> response = ApiResponse.<List<Email>>builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.OK.value())
-                .message("Emails retrieved successfully")
-                .data(emails)
-                .build();
 
-        return ResponseEntity.ok(response);
+        return ResponseUtil.success(emails, "Emails retrieved successfully");
     }
 
 
@@ -74,14 +82,7 @@ public class EmailController {
     public ResponseEntity<ApiResponse<Void>> handleBounce(@RequestBody BounceNotificationDTO bounce) {
         emailService.handleBounce(bounce);
 
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.OK.value())
-                .message("Bounce notification handled successfully")
-                .data(null)
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseUtil.success(null, "Bounce notification handled successfully");
     }
 
 }

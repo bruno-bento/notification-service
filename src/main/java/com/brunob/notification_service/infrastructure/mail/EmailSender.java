@@ -1,12 +1,16 @@
 package com.brunob.notification_service.infrastructure.mail;
 
 import com.brunob.notification_service.domain.model.email.Email;
+import com.brunob.notification_service.domain.model.smtp.SmtpConfig;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+
+import java.util.Properties;
 
 @Component
 public class EmailSender {
@@ -19,7 +23,9 @@ public class EmailSender {
     @Value("${app.tracking.pixel-url}")
     private String trackingPixelBaseUrl;
 
-    public void send(Email email) throws Exception {
+    public void send(Email email, SmtpConfig smtpConfig) throws Exception {
+        JavaMailSender mailSender = createMailSender(smtpConfig);
+
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -42,5 +48,20 @@ public class EmailSender {
         message.setHeader("X-Track-ID", email.getTrackingId());
 
         mailSender.send(message);
+    }
+
+    private JavaMailSender createMailSender(SmtpConfig smtpConfig) {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(smtpConfig.getHost());
+        mailSender.setPort(smtpConfig.getPort());
+        mailSender.setUsername(smtpConfig.getUsername());
+        mailSender.setPassword(smtpConfig.getPassword());
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+
+        return mailSender;
     }
 }

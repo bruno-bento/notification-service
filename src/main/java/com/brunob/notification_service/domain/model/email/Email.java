@@ -24,8 +24,10 @@ public class Email extends Notification {
     private String bounceReason;
     private LocalDateTime bounceAt;
 
+    private Long smtpId;
+
     @Builder
-    public Email(String recipient, String subject, String body) {
+    public Email(String recipient, String subject, String body, Long smtpId) {
         this.recipient = recipient;
         this.subject = subject;
         this.body = body;
@@ -33,6 +35,7 @@ public class Email extends Notification {
         this.retryCount = 0;
         this.createdAt = LocalDateTime.now();
         this.trackingId = UUID.randomUUID().toString();
+        this.smtpId = smtpId;
     }
 
     @Override
@@ -49,6 +52,7 @@ public class Email extends Notification {
 
     public void markAsOpened() {
         this.openedAt = LocalDateTime.now();
+        this.status = NotificationStatus.OPENED;
     }
 
     public void markAsBounced(String reason) {

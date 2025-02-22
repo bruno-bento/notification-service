@@ -5,7 +5,9 @@ import com.brunob.notification_service.infrastructure.security.annotation.Public
 import com.brunob.notification_service.infrastructure.security.jwt.JwtUtil;
 import com.brunob.notification_service.presentation.dto.ApiResponse;
 import com.brunob.notification_service.presentation.dto.LoginRequest;
+import com.brunob.notification_service.presentation.utils.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,18 +34,13 @@ public class AuthController {
 
     @PublicRoute
     @PostMapping("/login")
-    public ApiResponse<String> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtUtil.generateToken(loginRequest.getUsername());
 
-        return ApiResponse.<String>builder()
-                .timestamp(LocalDateTime.now())
-                .status(200)
-                .message("Login successful")
-                .data(token)
-                .build();
+        return ResponseUtil.success(token, "Login successful");
     }
 }

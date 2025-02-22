@@ -5,5 +5,6 @@ public enum NotificationStatus {
     SENT,
     FAILED,
     BOUNCED,
-    PERMANENTLY_FAILED
+    PERMANENTLY_FAILED,
+    OPENED
 }

@@ -15,5 +15,8 @@ public class EmailRequestDTO {
 
     @Schema(description = "E-mail body", example = "to recovery email, click here")
     private String body;
+
+    @Schema(description = "SMTP Server ID (Optional). If not provided, the system will choose automatically.", example = "1")
+    private Long smtpId;
 }
 
