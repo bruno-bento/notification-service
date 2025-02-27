@@ -61,6 +61,10 @@ public class Email extends Notification {
         this.bounceAt = LocalDateTime.now();
     }
 
+    public void setSmtpId(Long id){
+        if (this.smtpId == null) this.smtpId = id;
+    }
+
     public void markAsPermanentlyFailed() {
         this.status = NotificationStatus.PERMANENTLY_FAILED;
     }

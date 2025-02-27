@@ -58,17 +58,18 @@ public class EmailService implements NotificationService<Email> {
         emailRepository.findById(emailId).ifPresent(email -> {
             if (!email.canRetry()) return;
 
+            SmtpConfig smtpConfig = (email.getSmtpId() != null) ?
+                    smtpConfigService.getById(email.getSmtpId())
+                    : smtpConfigService.chooseLeastUsedSmtp();
             try {
-                SmtpConfig smtpConfig = (email.getSmtpId() != null) ?
-                        smtpConfigService.getById(email.getSmtpId())
-                        : smtpConfigService.chooseLeastUsedSmtp();
-
                 emailSender.send(email, smtpConfig);
                 email.markAsSent();
                 System.out.println("Email sent successfully: " + emailId);
             } catch (Exception e) {
                 email.markAsFailed();
                 producer.sendToQueue(email.getId());
+            } finally {
+                email.setSmtpId(smtpConfig.getId());
             }
 
             emailRepository.save(email);
